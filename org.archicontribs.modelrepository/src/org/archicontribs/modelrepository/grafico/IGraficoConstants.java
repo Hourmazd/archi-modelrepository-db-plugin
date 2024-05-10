@@ -32,6 +32,11 @@ public interface IGraficoConstants {
      * Name of folder for model
      */
     String MODEL_FOLDER = "model"; //$NON-NLS-1$
+    
+    /**
+     * File name of user name/password of database
+     */
+    String DB_CREDENTIALS_FILE = "secure_db_credentials"; //$NON-NLS-1$
 
     /**
      * File name of user name/password for each git repo
