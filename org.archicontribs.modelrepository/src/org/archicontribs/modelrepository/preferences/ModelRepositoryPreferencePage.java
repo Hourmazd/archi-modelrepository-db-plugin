@@ -12,6 +12,7 @@ import java.security.GeneralSecurityException;
 import org.archicontribs.modelrepository.ModelRepositoryPlugin;
 import org.archicontribs.modelrepository.authentication.internal.EncryptedCredentialsStorage;
 import org.archicontribs.modelrepository.grafico.IGraficoConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -52,6 +53,7 @@ implements IWorkbenchPreferencePage, IPreferenceConstants {
     
     private Text fServerAddressTextField;
     private Text fServerPortTextField;
+    private Text fDatabaseNameTextField;
     
     private Text fUserNameTextField;
     private Text fUserPasswordTextField;
@@ -62,7 +64,8 @@ implements IWorkbenchPreferencePage, IPreferenceConstants {
     private Spinner fFetchInBackgroundIntervalSpinner;
     
     private String[] DATABASE_ENGINES = {
-    		Messages.ModelRepositoryPreferencePage_28
+    		Messages.ModelRepositoryPreferencePage_28,
+    		Messages.ModelRepositoryPreferencePage_29
     };
     
     private boolean serverPasswordChanged;
@@ -90,7 +93,7 @@ implements IWorkbenchPreferencePage, IPreferenceConstants {
         Label label = new Label(dbDetailsGroup, SWT.NULL);
         label.setText(Messages.ModelRepositoryPreferencePage_27);
         
-        fDatabaseEngine = new Combo(dbDetailsGroup, 0);
+        fDatabaseEngine = new Combo(dbDetailsGroup, SWT.READ_ONLY);
         fDatabaseEngine.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         fDatabaseEngine.setItems(DATABASE_ENGINES);
                 
@@ -105,11 +108,17 @@ implements IWorkbenchPreferencePage, IPreferenceConstants {
         
         fServerPortTextField = UIUtils.createSingleTextControl(dbDetailsGroup, SWT.BORDER, false);
         fServerPortTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        
+        label = new Label(dbDetailsGroup, SWT.NULL);
+        label.setText(Messages.ModelRepositoryPreferencePage_30);
+        
+        fDatabaseNameTextField = UIUtils.createSingleTextControl(dbDetailsGroup, SWT.BORDER, false);
+        fDatabaseNameTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
                 
         // Authentication Group
         Group authGroup = new Group(client, SWT.NULL);
         authGroup.setText(Messages.ModelRepositoryPreferencePage_0);
-        authGroup.setLayout(new GridLayout(2, false));
+        authGroup.setLayout(new GridLayout(3, false));
         authGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         
         label = new Label(authGroup, SWT.NULL);
@@ -117,12 +126,23 @@ implements IWorkbenchPreferencePage, IPreferenceConstants {
         
         fUserNameTextField = UIUtils.createSingleTextControl(authGroup, SWT.BORDER, false);
         fUserNameTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        
+        label = new Label(authGroup, SWT.NULL);
 
         label = new Label(authGroup, SWT.NULL);
         label.setText(Messages.ModelRepositoryPreferencePage_16);
         
         fUserPasswordTextField = UIUtils.createSingleTextControl(authGroup, SWT.BORDER | SWT.PASSWORD, false);
         fUserPasswordTextField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        
+        Button testConnectionButton = new Button(authGroup, SWT.PUSH);
+        testConnectionButton.setText("Test Connection");
+        testConnectionButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+            	testConnection();
+            }
+        });
         
      // Workspace Group
         Group workspaceGroup = new Group(client, SWT.NULL);
@@ -181,12 +201,18 @@ implements IWorkbenchPreferencePage, IPreferenceConstants {
         }
         return dialog.open();
     }
+    
+    private void testConnection()
+    {
+    	MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Connection Test", "Done");
+    }    
 
     private void setValues() {
 
     	fDatabaseEngine.setText(getPreferenceStore().getString(PREFS_DATABASE_ENGINE));
         fServerAddressTextField.setText(getPreferenceStore().getString(PREFS_DATABASE_SERVER_ADDRESS));
         fServerPortTextField.setText(getPreferenceStore().getString(PREFS_DATABASE_SERVER_PORT));
+        fDatabaseNameTextField.setText(getPreferenceStore().getString(PREFS_DATABASE_NAME));
         
         fUserNameTextField.setText(getPreferenceStore().getString(PREFS_DATABASE_USER_NAME));
         try {
@@ -216,6 +242,7 @@ implements IWorkbenchPreferencePage, IPreferenceConstants {
     	getPreferenceStore().setValue(PREFS_DATABASE_ENGINE, fDatabaseEngine.getText());
     	getPreferenceStore().setValue(PREFS_DATABASE_SERVER_ADDRESS, fServerAddressTextField.getText());
     	getPreferenceStore().setValue(PREFS_DATABASE_SERVER_PORT, fServerPortTextField.getText());
+    	getPreferenceStore().setValue(PREFS_DATABASE_NAME, fDatabaseNameTextField.getText());
     	getPreferenceStore().setValue(PREFS_DATABASE_USER_NAME, fUserNameTextField.getText());
     	
         getPreferenceStore().setValue(PREFS_REPOSITORY_FOLDER, fUserRepoFolderTextField.getText());
@@ -251,6 +278,7 @@ implements IWorkbenchPreferencePage, IPreferenceConstants {
 
         fServerAddressTextField.setText(getPreferenceStore().getDefaultString(PREFS_DATABASE_SERVER_ADDRESS));
         fServerPortTextField.setText(getPreferenceStore().getDefaultString(PREFS_DATABASE_SERVER_PORT));
+        fDatabaseNameTextField.setText(getPreferenceStore().getDefaultString(PREFS_DATABASE_NAME));
         
         fUserNameTextField.setText(PREFS_DATABASE_USER_NAME); //$NON-NLS-1$
         fUserPasswordTextField.setText(PREFS_DATABASE_USER_PASS); //$NON-NLS-1$

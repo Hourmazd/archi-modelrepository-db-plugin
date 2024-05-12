@@ -19,6 +19,7 @@ public interface IPreferenceConstants {
 	String PREFS_DATABASE_ENGINE = "databaseEngine";
 	String PREFS_DATABASE_SERVER_ADDRESS = "serverAddress";
 	String PREFS_DATABASE_SERVER_PORT = "serverPort";
+	String PREFS_DATABASE_NAME = "Archi";
 	
 	String PREFS_DATABASE_USER_NAME = "sa";
     String PREFS_DATABASE_USER_PASS = "databaseUserPass";
