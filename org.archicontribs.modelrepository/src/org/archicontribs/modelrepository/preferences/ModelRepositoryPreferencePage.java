@@ -200,11 +200,18 @@ public class ModelRepositoryPreferencePage extends PreferencePage
 		return dialog.open();
 	}
 
-	private void testConnection() {
+	private boolean testConnection() {
 
 		if (fDatabaseEngine.getText().equals(Messages.ModelRepositoryPreferencePage_28)) {
 
-			var parameters = new SQLServerConfiguration();
+			SQLServerConfiguration parameters = null;
+			try {
+				parameters = new SQLServerConfiguration();
+			} catch (Exception e) {
+				MessageDialog.openError(Display.getCurrent().getActiveShell(), "Connection Test", e.getMessage());
+				return false;
+			}
+			
 			parameters.ServerAddress = fServerAddressTextField.getText();
 			parameters.ServerPort = Integer.parseInt(fServerPortTextField.getText());
 			parameters.DatabaseName = fDatabaseNameTextField.getText();
@@ -219,6 +226,7 @@ public class ModelRepositoryPreferencePage extends PreferencePage
 				} catch (Exception e) {
 					e.printStackTrace();
 					MessageDialog.openError(Display.getCurrent().getActiveShell(), "Connection Test", e.getMessage());
+					return false;
 				}
 			}
 
@@ -230,15 +238,24 @@ public class ModelRepositoryPreferencePage extends PreferencePage
 				if (result) {
 					MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Connection Test",
 							"Successfully connected to the server.");
+					return true;
 				} else {
 					MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Connection Test",
 							"Failed to make connection to the server.");
+					return false;
 				}
 
 			} catch (Exception e) {
 				MessageDialog.openError(Display.getCurrent().getActiveShell(), "Connection Test", e.getMessage());
+				return false;
 			}
 		}
+		else {
+			MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Connection Test",
+					"No database repository class has been defined for '" + fDatabaseEngine.getText() + "'. Please contact your administrator.");
+		}
+		
+		return false;
 	}
 
 	private void setValues() {

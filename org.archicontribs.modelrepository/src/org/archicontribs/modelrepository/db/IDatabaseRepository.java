@@ -1,5 +1,8 @@
 package org.archicontribs.modelrepository.db;
 
+import java.sql.Connection;
+import java.util.UUID;
+
 /**
  * Repository interface to access database and perform actions
  * 
@@ -10,5 +13,9 @@ public interface IDatabaseRepository {
 	
 	IDatabaseConfiguration connectionProperties = null;
 	
-	public boolean validateConnection() throws Exception ;
+	public Connection getConnection() throws Exception;
+	
+	public boolean validateConnection() throws Exception;
+	
+	public UUID InsertModel(String modelName) throws Exception;
 }

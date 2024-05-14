@@ -79,7 +79,7 @@ public class ArchiRepository implements IArchiRepository {
     private File fLocalRepoFolder;
 
     public ArchiRepository(File localRepoFolder) {
-        fLocalRepoFolder = localRepoFolder;
+        fLocalRepoFolder = localRepoFolder;        
     }
 
     @Override
@@ -89,7 +89,8 @@ public class ArchiRepository implements IArchiRepository {
     
     @Override
     public File getLocalGitFolder() {
-        return new File(getLocalRepositoryFolder(), ".git");
+        //return new File(getLocalRepositoryFolder(), ".git");
+    	return getLocalRepositoryFolder();
     }
 
     @Override
@@ -123,7 +124,8 @@ public class ArchiRepository implements IArchiRepository {
 
     @Override
     public File getTempModelFile() {
-        return new File(getLocalRepositoryFolder(), "/.git/" + IGraficoConstants.LOCAL_ARCHI_FILENAME);
+        //return new File(getLocalRepositoryFolder(), "/.git/" + IGraficoConstants.LOCAL_ARCHI_FILENAME);
+    	return new File(getLocalRepositoryFolder(), "/" + IGraficoConstants.LOCAL_ARCHI_FILENAME);
     }
     
     @Override

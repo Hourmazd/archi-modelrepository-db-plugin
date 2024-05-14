@@ -65,35 +65,33 @@ public class CreateRepoFromModelAction extends AbstractModelAction {
             return;
         }
         
-        NewModelRepoDialog dialog = new NewModelRepoDialog(fWindow.getShell());
-        if(dialog.open() != Window.OK) {
-            return;
-        }
+		/*
+		 * NewModelRepoDialog dialog = new NewModelRepoDialog(fWindow.getShell());
+		 * if(dialog.open() != Window.OK) { return; }
+		 */
         
-        final String repoURL = dialog.getURL();
-        final boolean storeCredentials = dialog.doStoreCredentials();
-        final UsernamePassword npw = dialog.getUsernamePassword();
-        
-        if(!StringUtils.isSet(repoURL)) {
-            return;
-        }
-        
-        if(GraficoUtils.isHTTP(repoURL) && !StringUtils.isSet(npw.getUsername()) && npw.getPassword().length == 0) {
-            MessageDialog.openError(fWindow.getShell(), 
-                    Messages.CreateRepoFromModelAction_0,
-                    Messages.CreateRepoFromModelAction_3);
-
-            return;
-        }
+		/*
+		 * final String repoURL = dialog.getURL(); final boolean storeCredentials =
+		 * dialog.doStoreCredentials(); final UsernamePassword npw =
+		 * dialog.getUsernamePassword();
+		 * 
+		 * if(!StringUtils.isSet(repoURL)) { return; }
+		 * 
+		 * if(GraficoUtils.isHTTP(repoURL) && !StringUtils.isSet(npw.getUsername()) &&
+		 * npw.getPassword().length == 0) { MessageDialog.openError(fWindow.getShell(),
+		 * Messages.CreateRepoFromModelAction_0, Messages.CreateRepoFromModelAction_3);
+		 * 
+		 * return; }
+		 */
         
         // Create a new local folder
-        File localRepoFolder = GraficoUtils.getUniqueLocalFolder(ModelRepositoryPlugin.INSTANCE.getUserModelRepositoryFolder(), repoURL);
+        File localRepoFolder = GraficoUtils.getUniqueLocalFolder(ModelRepositoryPlugin.INSTANCE.getUserModelRepositoryFolder(), fModel.getName());
         setRepository(new ArchiRepository(localRepoFolder));
         
         try {
             // Create a new repo
-            try(Git git = getRepository().createNewLocalGitRepository(repoURL)) {
-            }
+            //try(Git git = getRepository().createNewLocalGitRepository(repoURL)) {
+            //}
             
             // TODO: If the model has not been saved yet this is fine but if the model already exists
             // We should tell the user this is the case
@@ -104,45 +102,43 @@ public class CreateRepoFromModelAction extends AbstractModelAction {
             // And Save it
             IEditorModelManager.INSTANCE.saveModel(fModel);
             
+            try {
+    			getDbRepository().InsertModel(fModel.getName());
+
+    		} catch (Exception e) {
+
+    			e.printStackTrace();
+    			
+    			displayErrorDialog("Error", e.getMessage());
+    		}
+            
             // Export to Grafico
-            getRepository().exportModelToGraficoFiles();
+            //getRepository().exportModelToGraficoFiles();
             
             // Commit changes
-            getRepository().commitChanges(Messages.CreateRepoFromModelAction_5, false);
+            //getRepository().commitChanges(Messages.CreateRepoFromModelAction_5, false);
             
             // Push
-            Exception[] exception = new Exception[1];
-            IProgressService ps = PlatformUI.getWorkbench().getProgressService();
-            ps.busyCursorWhile(new IRunnableWithProgress() {
-                @Override
-                public void run(IProgressMonitor pm) {
-                    try {
-                        // Update Proxy
-                        ProxyAuthenticator.update(repoURL);
-                        
-                        pm.beginTask(Messages.CreateRepoFromModelAction_4, -1);
-                        getRepository().pushToRemote(npw, new ProgressMonitorWrapper(pm));
-                    }
-                    catch(Exception ex) {
-                        exception[0] = ex;
-                    }
-                    finally {
-                        // Clear Proxy
-                        ProxyAuthenticator.clear();
-                    }
-                }
-            });
-
-            if(exception[0] != null) {
-                throw exception[0];
-            }
-
-            // Store repo credentials if HTTP and option is set
-            if(GraficoUtils.isHTTP(repoURL) && storeCredentials) {
-                EncryptedCredentialsStorage cs = EncryptedCredentialsStorage.forRepository(getRepository());
-                cs.store(npw);
-            }
-            
+			/*
+			 * Exception[] exception = new Exception[1]; IProgressService ps =
+			 * PlatformUI.getWorkbench().getProgressService(); ps.busyCursorWhile(new
+			 * IRunnableWithProgress() {
+			 * 
+			 * @Override public void run(IProgressMonitor pm) { try { // Update Proxy
+			 * ProxyAuthenticator.update(repoURL);
+			 * 
+			 * pm.beginTask(Messages.CreateRepoFromModelAction_4, -1);
+			 * getRepository().pushToRemote(npw, new ProgressMonitorWrapper(pm)); }
+			 * catch(Exception ex) { exception[0] = ex; } finally { // Clear Proxy
+			 * ProxyAuthenticator.clear(); } } });
+			 * 
+			 * if(exception[0] != null) { throw exception[0]; }
+			 * 
+			 * // Store repo credentials if HTTP and option is set
+			 * if(GraficoUtils.isHTTP(repoURL) && storeCredentials) {
+			 * EncryptedCredentialsStorage cs =
+			 * EncryptedCredentialsStorage.forRepository(getRepository()); cs.store(npw); }
+			 */
             // Save the checksum
             getRepository().saveChecksum();
         }
@@ -151,9 +147,9 @@ public class CreateRepoFromModelAction extends AbstractModelAction {
         }
         finally {
             // Clear credentials
-            if(npw != null) {
-                npw.clear();
-            }
+			/*
+			 * if(npw != null) { npw.clear(); }
+			 */
         }
     }
 }

@@ -149,11 +149,12 @@ public class GraficoUtils {
         }
         
         File parent = file.getParentFile();
-        if(parent == null || !parent.getName().equals(".git")) { //$NON-NLS-1$
+        if(parent == null) { // || !parent.getName().equals(".git")) { //$NON-NLS-1$
             return null;
         }
         
-        return parent.getParentFile();
+        //return parent.getParentFile();
+        return parent;
     }
     
     /**

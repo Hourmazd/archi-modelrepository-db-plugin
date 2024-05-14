@@ -6,17 +6,12 @@ package org.archicontribs.modelrepository.db;
  * @author Mohi Ghanbari
  */
 
-public class DatabaseRepository implements IDatabaseRepository {
+public abstract class DatabaseRepository implements IDatabaseRepository {
 
 	protected IDatabaseConfiguration connectionProperties = null;
 	
 	public DatabaseRepository(IDatabaseConfiguration connectionProperties)
 	{
 		this.connectionProperties = connectionProperties;
-	}
-	
-	@Override
-	public boolean validateConnection() throws Exception {
-		return false;
 	}
 }

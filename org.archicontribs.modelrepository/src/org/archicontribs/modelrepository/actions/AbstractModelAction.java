@@ -11,6 +11,8 @@ import java.security.GeneralSecurityException;
 import org.archicontribs.modelrepository.ModelRepositoryPlugin;
 import org.archicontribs.modelrepository.authentication.UsernamePassword;
 import org.archicontribs.modelrepository.authentication.internal.EncryptedCredentialsStorage;
+import org.archicontribs.modelrepository.db.DatabaseRepositoryFactory;
+import org.archicontribs.modelrepository.db.IDatabaseRepository;
 import org.archicontribs.modelrepository.dialogs.CommitDialog;
 import org.archicontribs.modelrepository.dialogs.ErrorMessageDialog;
 import org.archicontribs.modelrepository.dialogs.UserNamePasswordDialog;
@@ -22,6 +24,7 @@ import org.archicontribs.modelrepository.preferences.IPreferenceConstants;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.archimatetool.editor.model.IEditorModelManager;
@@ -34,12 +37,20 @@ import com.archimatetool.model.IArchimateModel;
  */
 public abstract class AbstractModelAction extends Action implements IGraficoModelAction {
 	
+	private IDatabaseRepository dbRepository;
 	private IArchiRepository fRepository;
 	
 	protected IWorkbenchWindow fWindow;
 	
 	protected AbstractModelAction(IWorkbenchWindow window) {
 	    fWindow = window;
+	    
+	    try {
+			dbRepository = DatabaseRepositoryFactory.getDbRepository();
+		} catch (Exception e) {
+			e.printStackTrace();
+			MessageDialog.openError(Display.getCurrent().getActiveShell(), "Action Constructor", e.getMessage());
+		}
 	}
 	
 	@Override
@@ -51,6 +62,10 @@ public abstract class AbstractModelAction extends Action implements IGraficoMode
 	@Override
 	public IArchiRepository getRepository() {
 	    return fRepository;
+	}
+	
+	public IDatabaseRepository getDbRepository() {
+	    return dbRepository;
 	}
 	
     @Override
