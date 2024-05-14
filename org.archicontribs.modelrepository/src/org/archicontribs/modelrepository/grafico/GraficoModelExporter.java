@@ -5,15 +5,24 @@
  */
 package org.archicontribs.modelrepository.grafico;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
 
 import org.archicontribs.modelrepository.ModelRepositoryPlugin;
 import org.archicontribs.modelrepository.preferences.IPreferenceConstants;
@@ -100,19 +109,21 @@ public class GraficoModelExporter {
      * Export the IArchimateModel as Grafico files
      * @throws IOException
      */
-    public void exportModel() throws IOException {
+    public List<String> exportModel() throws IOException {
         // Define target folders for model and images
         // Delete them and re-create them (remark: FileUtils.deleteFolder() does sanity checks)
         File modelFolder = new File(fLocalRepoFolder, IGraficoConstants.MODEL_FOLDER);
-        FileUtils.deleteFolder(modelFolder);
-        modelFolder.mkdirs();
+        //FileUtils.deleteFolder(modelFolder);
+        //modelFolder.mkdirs();
 
-        File imagesFolder = new File(fLocalRepoFolder, IGraficoConstants.IMAGES_FOLDER);
-        FileUtils.deleteFolder(imagesFolder);
-        imagesFolder.mkdirs();
-
-        // Save model images (if any): this has to be done on original model (not a copy)
-        saveImages();
+		/*
+		 * File imagesFolder = new File(fLocalRepoFolder,
+		 * IGraficoConstants.IMAGES_FOLDER); FileUtils.deleteFolder(imagesFolder);
+		 * imagesFolder.mkdirs();
+		 * 
+		 * // Save model images (if any): this has to be done on original model (not a
+		 * copy) saveImages();
+		 */
         
         // Create ResourceSet
         fResourceSet = new ResourceSetImpl();
@@ -125,44 +136,57 @@ public class GraficoModelExporter {
         
         // Create directory structure and prepare all Resources
         createAndSaveResourceForFolder(copy, modelFolder);
-
-        // Now save all Resources
-        int maxThreads = ModelRepositoryPlugin.INSTANCE.getPreferenceStore().getInt(IPreferenceConstants.PREFS_EXPORT_MAX_THREADS);
-        JobGroup jobgroup = new JobGroup("GraficoModelExporter", maxThreads, 1); //$NON-NLS-1$
         
-        final ExceptionProgressMonitor pm = new ExceptionProgressMonitor();
+        var resources = fResourceSet.getResources();
+        List<String> stringList = new ArrayList<>();
+                
+        for(Resource resource : resources) {
+        	stringList.add(convertResourceToXML(resource));
+        }      
         
-        for(Resource resource : fResourceSet.getResources()) {
-            Job job = new Job("Resource Save Job") { //$NON-NLS-1$
-                @Override
-                protected IStatus run(IProgressMonitor monitor) {
-                    try {
-                        resource.save(null);
-                    }
-                    catch(IOException ex) {
-                        pm.catchException(ex);
-                    }
-                    return Status.OK_STATUS;
-                }
-            };
-            
-            job.setJobGroup(jobgroup);
-            job.schedule();
-        }
+        return stringList;
         
-        try {
-            jobgroup.join(0, pm);
-        }
-        catch(OperationCanceledException | InterruptedException ex) {
-            ex.printStackTrace();
-        }
-        
-        // Throw on any exception
-        if(pm.ex != null) {
-            throw pm.ex;
-        }
+		/*
+		 * // Now save all Resources int maxThreads =
+		 * ModelRepositoryPlugin.INSTANCE.getPreferenceStore().getInt(
+		 * IPreferenceConstants.PREFS_EXPORT_MAX_THREADS); JobGroup jobgroup = new
+		 * JobGroup("GraficoModelExporter", maxThreads, 1); //$NON-NLS-1$
+		 * 
+		 * final ExceptionProgressMonitor pm = new ExceptionProgressMonitor();
+		 * 
+		 * for(Resource resource : resources) { Job job = new Job("Resource Save Job") {
+		 * //$NON-NLS-1$
+		 * 
+		 * @Override protected IStatus run(IProgressMonitor monitor) { try {
+		 * resource.save(null); } catch(IOException ex) { pm.catchException(ex); }
+		 * return Status.OK_STATUS; } };
+		 * 
+		 * job.setJobGroup(jobgroup); job.schedule(); }
+		 * 
+		 * try { jobgroup.join(0, pm); } catch(OperationCanceledException |
+		 * InterruptedException ex) { ex.printStackTrace(); }
+		 * 
+		 * // Throw on any exception if(pm.ex != null) { throw pm.ex; }
+		 */
     }
     
+    private static String convertResourceToXML(Resource resource) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        
+        try {
+            // Save the resource content to the output stream
+            resource.save(outputStream, null);
+
+            // Convert the output stream to a string
+            return outputStream.toString("UTF-8");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+    
+
     /**
      * For each folder inside model, create a directory and a Resource to save it.
      * For each element, create a Resource to save it
@@ -178,7 +202,7 @@ public class GraficoModelExporter {
         
         for(IFolder tmpFolder : allFolders) {
             File tmpFolderFile = new File(folder, getNameFor(tmpFolder));
-            tmpFolderFile.mkdirs();
+            //tmpFolderFile.mkdirs();
             createAndSaveResource(new File(tmpFolderFile, IGraficoConstants.FOLDER_XML), tmpFolder);
             createAndSaveResourceForFolder(tmpFolder, tmpFolderFile);
         }

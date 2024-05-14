@@ -17,6 +17,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -361,9 +363,10 @@ public class ArchiRepository implements IArchiRepository {
     }
     
     @Override
-    public void exportModelToGraficoFiles() throws IOException, GitAPIException {
+    public List<String> exportModelToGraficoFiles() throws IOException {
         // Open the model before showing the progress monitor
         IArchimateModel model = IEditorModelManager.INSTANCE.openModel(getTempModelFile());
+        final List<String> xmlContents = new ArrayList<String>();
         
         if(model == null) {
             throw new IOException(Messages.ArchiRepository_0);
@@ -382,21 +385,22 @@ public class ArchiRepository implements IArchiRepository {
                     try {
                         // Export
                         GraficoModelExporter exporter = new GraficoModelExporter(model, getLocalRepositoryFolder());
-                        exporter.exportModel();
+                        for(String xmlContent :exporter.exportModel()) {
+                        	xmlContents.add(xmlContent);
+                        }
                         
                         // Check lock file is deleted
                         checkDeleteLockFile();
                         
                         // Stage modified files to index - this can take a long time!
                         // This will clear any different line endings and calls to git.status() will be faster
-                        try(Git git = Git.open(getLocalRepositoryFolder())) {
-                            AddCommand addCommand = git.add();
-                            addCommand.addFilepattern(".");
-                            addCommand.setUpdate(false);
-                            addCommand.call();
-                        }
+						/*
+						 * try(Git git = Git.open(getLocalRepositoryFolder())) { AddCommand addCommand =
+						 * git.add(); addCommand.addFilepattern("."); addCommand.setUpdate(false);
+						 * addCommand.call(); }
+						 */
                     }
-                    catch(IOException | GitAPIException ex) {
+                    catch(IOException ex) {
                         exception[0] = ex;
                     }
                 }
@@ -409,9 +413,8 @@ public class ArchiRepository implements IArchiRepository {
         if(exception[0] instanceof IOException) {
             throw (IOException)exception[0];
         }
-        if(exception[0] instanceof GitAPIException) {
-            throw (GitAPIException)exception[0];
-        }
+        
+        return xmlContents;
     }
     
     @Override

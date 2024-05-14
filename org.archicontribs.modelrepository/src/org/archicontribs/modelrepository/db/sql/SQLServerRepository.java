@@ -64,34 +64,29 @@ public class SQLServerRepository extends DatabaseRepository implements ISQLServe
 			return false;
 		}
 	}
-	
+
 	@Override
-	public UUID InsertModel(String modelName) throws Exception {
-		
+	public UUID InsertModel(UUID modelId, String modelName) throws Exception {
+
 		String sql = "{call InsertNewModel(?, ?)}";
 
-        try (Connection conn = getConnection();
-             CallableStatement stmt = conn.prepareCall(sql)) {
+		try (Connection conn = getConnection(); CallableStatement stmt = conn.prepareCall(sql)) {
 
-            // Set the input parameter for ModelName
-            stmt.setString(1, modelName.trim());
+			// Set the input parameter for ModelId
+			stmt.setObject(1, modelId);
 
-            // Register the output parameter for ModelId
-            stmt.registerOutParameter(2, Types.VARCHAR); // Assuming the ModelId is of type UNIQUEIDENTIFIER
+			// Set the input parameter for ModelName
+			stmt.setString(2, modelName.trim());
 
-            // Execute the stored procedure
-            stmt.execute();
+			// Execute the stored procedure
+			stmt.execute();
 
-            // Get the output parameter value (ModelId)
-            String modelIdString  = stmt.getString(2);
+			return modelId;
 
-            return UUID.fromString(modelIdString);
-            
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        
-		return null;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	@Override

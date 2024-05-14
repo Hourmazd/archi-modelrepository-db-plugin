@@ -56,28 +56,20 @@ public class CommitModelAction extends AbstractModelAction {
 
         // Do the Grafico Export first
         try {
-            getRepository().exportModelToGraficoFiles();
+          var xmlContents = getRepository().exportModelToGraficoFiles();
         }
         catch(Exception ex) {
             displayErrorDialog(Messages.CommitModelAction_0, ex);
             return;
         }
         
-        // Then Commit
-        try {
-            if(getRepository().hasChangesToCommit()) {
-                if(offerToCommitChanges()) {
-                    notifyChangeListeners(IRepositoryListener.HISTORY_CHANGED);
-                }
-            }
-            else {
-                MessageDialog.openInformation(fWindow.getShell(),
-                        Messages.CommitModelAction_0,
-                        Messages.CommitModelAction_2);
-            }
-        }
-        catch(Exception ex) {
-            displayErrorDialog(Messages.CommitModelAction_0, ex);
-        }
+		/*
+		 * // Then Commit try { if(getRepository().hasChangesToCommit()) {
+		 * if(offerToCommitChanges()) {
+		 * notifyChangeListeners(IRepositoryListener.HISTORY_CHANGED); } } else {
+		 * MessageDialog.openInformation(fWindow.getShell(),
+		 * Messages.CommitModelAction_0, Messages.CommitModelAction_2); } }
+		 * catch(Exception ex) { displayErrorDialog(Messages.CommitModelAction_0, ex); }
+		 */
     }
 }

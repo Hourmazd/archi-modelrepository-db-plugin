@@ -17,5 +17,5 @@ public interface IDatabaseRepository {
 	
 	public boolean validateConnection() throws Exception;
 	
-	public UUID InsertModel(String modelName) throws Exception;
+	public UUID InsertModel(UUID modelId, String modelName) throws Exception;
 }

@@ -3,6 +3,7 @@ package org.archicontribs.modelrepository.grafico;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 
 import org.archicontribs.modelrepository.authentication.UsernamePassword;
 import org.eclipse.jgit.api.Git;
@@ -162,7 +163,7 @@ public interface IArchiRepository extends IGraficoConstants {
      * @throws IOException
      * @throws GitAPIException 
      */
-    void exportModelToGraficoFiles() throws IOException, GitAPIException;
+    List<String> exportModelToGraficoFiles() throws IOException;
 
     /**
      * Save a checksum
