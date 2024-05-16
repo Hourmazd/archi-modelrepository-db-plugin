@@ -77,8 +77,10 @@ public class CreateRepoFromModelAction extends AbstractModelAction {
 				@Override
 				public void run(IProgressMonitor pm) {
 					try {
+						
+						var modelId = DBHelper.convertModelIdToUuid(fModel.getId());
 
-						getDbRepository().InsertModel(DBHelper.convertModelIdToUuid(fModel.getId()), fModel.getName());
+						getDbRepository().InsertModel(modelId, fModel.getName(), DBHelper.getActiveUserId());
 
 						// Save the checksum
 						getRepository().saveChecksum();
@@ -87,7 +89,7 @@ public class CreateRepoFromModelAction extends AbstractModelAction {
 						
 						exception[0] = e;
 
-						e.printStackTrace();
+						e.printStackTrace();						
 
 						fModel.setFile(null);
 					}

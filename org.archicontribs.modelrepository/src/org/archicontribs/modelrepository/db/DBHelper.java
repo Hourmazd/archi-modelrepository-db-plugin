@@ -4,6 +4,10 @@ import java.util.UUID;
 
 public class DBHelper {
 	
+	public static UUID getActiveUserId() {
+		return UUID.fromString("d9b2d63d-a233-4123-847e-3a3f0f5d9152");
+	}
+	
 	public static UUID convertModelIdToUuid(String modelId) {
 		
 		var uuidString = modelId.substring(3);
