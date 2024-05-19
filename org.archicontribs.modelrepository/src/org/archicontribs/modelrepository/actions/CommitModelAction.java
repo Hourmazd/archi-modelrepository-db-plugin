@@ -6,6 +6,7 @@
 package org.archicontribs.modelrepository.actions;
 
 import org.archicontribs.modelrepository.IModelRepositoryImages;
+import org.archicontribs.modelrepository.db.DBHelper;
 import org.archicontribs.modelrepository.grafico.ArchiRepository;
 import org.archicontribs.modelrepository.grafico.GraficoUtils;
 import org.archicontribs.modelrepository.grafico.IRepositoryListener;
@@ -56,7 +57,10 @@ public class CommitModelAction extends AbstractModelAction {
 
         // Do the Grafico Export first
         try {
-          var xmlContents = getRepository().exportModelToGraficoFiles();
+          var elements = getRepository().exportModelToGraficoFiles();          
+
+    	  getDbRepository().SaveElements(elements, DBHelper.getActiveUserId());
+          
         }
         catch(Exception ex) {
             displayErrorDialog(Messages.CommitModelAction_0, ex);

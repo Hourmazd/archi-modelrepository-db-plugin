@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -25,6 +26,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 
 import org.archicontribs.modelrepository.ModelRepositoryPlugin;
+import org.archicontribs.modelrepository.db.DBHelper;
+import org.archicontribs.modelrepository.db.DatabaseElementEntity;
 import org.archicontribs.modelrepository.preferences.IPreferenceConstants;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -107,9 +110,10 @@ public class GraficoModelExporter {
 	
     /**
      * Export the IArchimateModel as Grafico files
-     * @throws IOException
+     * @throws Exception 
      */
-    public List<String> exportModel() throws IOException {
+    public List<DatabaseElementEntity> exportModel() throws Exception {
+    	
         // Define target folders for model and images
         // Delete them and re-create them (remark: FileUtils.deleteFolder() does sanity checks)
         File modelFolder = new File(fLocalRepoFolder, IGraficoConstants.MODEL_FOLDER);
@@ -135,16 +139,19 @@ public class GraficoModelExporter {
         IArchimateModel copy = EcoreUtil.copy(fModel);
         
         // Create directory structure and prepare all Resources
-        createAndSaveResourceForFolder(copy, modelFolder);
+        var elements = createAndSaveResourceForFolder(copy, modelFolder, null);
         
-        var resources = fResourceSet.getResources();
-        List<String> stringList = new ArrayList<>();
-                
-        for(Resource resource : resources) {
-        	stringList.add(convertResourceToXML(resource));
-        }      
+        UUID modelId= GraficoUtils.GetUuidFromElementlId(fModel.getId());
+        int modelVersion = 1;
         
-        return stringList;
+        for(var element:elements) {
+        	element.ModelId = modelId;
+        	element.ModelVersion = modelVersion;        	
+        }
+        
+        //fResourceSet.getResources();
+
+        return elements;
         
 		/*
 		 * // Now save all Resources int maxThreads =
@@ -170,21 +177,19 @@ public class GraficoModelExporter {
 		 */
     }
     
-    private static String convertResourceToXML(Resource resource) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        
-        try {
-            // Save the resource content to the output stream
-            resource.save(outputStream, null);
-
-            // Convert the output stream to a string
-            return outputStream.toString("UTF-8");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
+	/*
+	 * private static String convertResourceToXML(Resource resource) {
+	 * ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+	 * 
+	 * try { // Save the resource content to the output stream
+	 * resource.save(outputStream, null);
+	 * 
+	 * // Convert the output stream to a string return
+	 * outputStream.toString("UTF-8"); } catch (IOException e) {
+	 * e.printStackTrace(); }
+	 * 
+	 * return null; }
+	 */
     
 
     /**
@@ -193,34 +198,48 @@ public class GraficoModelExporter {
      * 
      * @param folderContainer Model or folder to work on 
      * @param folder Directory in which to generate files
-     * @throws IOException
+     * @throws Exception 
      */
-    private void createAndSaveResourceForFolder(IFolderContainer folderContainer, File folder) throws IOException {
-        // Save each children folders
+    private List<DatabaseElementEntity> createAndSaveResourceForFolder(IFolderContainer folderContainer, File folder, List<DatabaseElementEntity> elements) throws Exception {
+        
+    	if (elements == null) {
+    		elements = new ArrayList<DatabaseElementEntity>();
+    	}
+    	
+    	// Save each children folders
         List<IFolder> allFolders = new ArrayList<IFolder>();
         allFolders.addAll(folderContainer.getFolders());
         
         for(IFolder tmpFolder : allFolders) {
             File tmpFolderFile = new File(folder, getNameFor(tmpFolder));
             //tmpFolderFile.mkdirs();
-            createAndSaveResource(new File(tmpFolderFile, IGraficoConstants.FOLDER_XML), tmpFolder);
-            createAndSaveResourceForFolder(tmpFolder, tmpFolderFile);
+
+            var element = DBHelper.GetElementClassFromEObject(tmpFolder);
+        	element.ParentId = GraficoUtils.GetUuidFromElementlId(((IIdentifier) folderContainer).getId());
+            element.XmlContent = createAndSaveResource(new File(tmpFolderFile, IGraficoConstants.FOLDER_XML), tmpFolder);;
+            elements.add(element);
+            
+            createAndSaveResourceForFolder(tmpFolder, tmpFolderFile, elements);
         }
         
         // Save each children elements
         if(folderContainer instanceof IFolder) {
+        	
             // Save each children element
             List<EObject> allElements = new ArrayList<EObject>();
             allElements.addAll(((IFolder)folderContainer).getElements());
             for(EObject tmpElement : allElements) {
-                createAndSaveResource(
-                        new File(folder, tmpElement.getClass().getSimpleName() + "_" + ((IIdentifier)tmpElement).getId() + ".xml"), //$NON-NLS-1$ //$NON-NLS-2$
-                        tmpElement);
+            	var element = DBHelper.GetElementClassFromEObject(tmpElement);
+            	element.ParentId = GraficoUtils.GetUuidFromElementlId(((IIdentifier)folderContainer).getId());
+            	element.XmlContent = createAndSaveResource(new File(folder, tmpElement.getClass().getSimpleName() + "_" + ((IIdentifier)tmpElement).getId() + ".xml"), tmpElement);;
+                elements.add(element);
             }
         }
-        if(folderContainer instanceof IArchimateModel) {
-            createAndSaveResource(new File(folder, IGraficoConstants.FOLDER_XML), folderContainer);
-        }
+        //if(folderContainer instanceof IArchimateModel) {
+        //	createAndSaveResource(new File(folder, IGraficoConstants.FOLDER_XML), folderContainer);
+        //}
+        
+        return elements;
     }
     
     /**
@@ -240,7 +259,7 @@ public class GraficoModelExporter {
      * @param object
      * @throws IOException
      */
-    private void createAndSaveResource(File file, EObject object) throws IOException {
+    private String createAndSaveResource(File file, EObject object) throws IOException {
     	// Update the URIConverter
         // Map the logical name (filename) to the physical name (path+filename)
     	// Folders must be declared with absolute path or else the 'folder.xml' file is not created
@@ -271,6 +290,8 @@ public class GraficoModelExporter {
 
         // Add the object to the resource
         resource.getContents().add(object);
+        
+        return GraficoUtils.GetXmlContentOfResource(resource);
     }
     
     /**

@@ -219,7 +219,7 @@ public class GraficoModelLoader {
     }
 
     @SuppressWarnings("unused")
-    private void deleteProblemObjects(List<UnresolvedObject> unresolvedObjects, IArchimateModel model) throws IOException {
+    private void deleteProblemObjects(List<UnresolvedObject> unresolvedObjects, IArchimateModel model) throws Exception {
         for(UnresolvedObject unresolved : unresolvedObjects) {
             String parentID = unresolved.parentObject.getId();
             

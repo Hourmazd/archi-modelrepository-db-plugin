@@ -78,7 +78,7 @@ public class CreateRepoFromModelAction extends AbstractModelAction {
 				public void run(IProgressMonitor pm) {
 					try {
 						
-						var modelId = DBHelper.convertModelIdToUuid(fModel.getId());
+						var modelId = GraficoUtils.GetUuidFromElementlId(fModel.getId());
 
 						getDbRepository().InsertModel(modelId, fModel.getName(), DBHelper.getActiveUserId());
 

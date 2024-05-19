@@ -5,6 +5,7 @@
  */
 package org.archicontribs.modelrepository.grafico;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -14,7 +15,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
+import org.archicontribs.modelrepository.db.DBHelper;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -200,5 +205,57 @@ public class GraficoUtils {
         String str = new String(loader.getBytes(), StandardCharsets.UTF_8);
         str = str.replaceAll("\\r?\\n", lineEnding); //$NON-NLS-1$
         Files.write(Paths.get(file.getAbsolutePath()), str.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+    }
+    
+    public static UUID getActiveUserId() {
+		return UUID.fromString("d9b2d63d-a233-4123-847e-3a3f0f5d9152");
+	}
+	
+	public static UUID GetUuidFromElementlId(String modelId) {
+		
+		var uuidString = modelId.substring(3);
+    	
+    	// Insert hyphens at appropriate positions
+        StringBuilder uuidBuilder = new StringBuilder(uuidString);
+        uuidBuilder.insert(20, '-'); // after 8 characters
+        uuidBuilder.insert(16, '-'); // after 12 characters
+        uuidBuilder.insert(12, '-'); // after 16 characters
+        uuidBuilder.insert(8, '-');  // after 20 characters
+
+        // Parse the UUID string
+        return UUID.fromString(uuidBuilder.toString());
+	}
+	
+	public static String GetElementIdFromUuid(UUID id) {
+		
+		// Convert UUID to string without hyphens
+        String uuidWithoutHyphens = id.toString().replace("-", "");
+
+        // Concatenate "id-" with UUID without hyphens
+        return "id-" + uuidWithoutHyphens;
+	}
+    
+    public static Object GetFieldValueOfEObject(EObject eObject, String fieldName) {
+    	
+    	var eClass = eObject.eClass();
+        var feature = eClass.getEStructuralFeature(fieldName);
+        var featureValue = eObject.eGet(feature);
+        return featureValue;
+    }
+    
+    public static String GetXmlContentOfResource(Resource resource) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        
+        try {
+            // Save the resource content to the output stream
+            resource.save(outputStream, null);
+
+            // Convert the output stream to a string
+            return outputStream.toString("UTF-8");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import org.archicontribs.modelrepository.authentication.CredentialsAuthenticator;
 import org.archicontribs.modelrepository.authentication.UsernamePassword;
+import org.archicontribs.modelrepository.db.DatabaseElementEntity;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jgit.api.AddCommand;
@@ -363,10 +364,10 @@ public class ArchiRepository implements IArchiRepository {
     }
     
     @Override
-    public List<String> exportModelToGraficoFiles() throws IOException {
+    public List<DatabaseElementEntity> exportModelToGraficoFiles() throws IOException {
         // Open the model before showing the progress monitor
         IArchimateModel model = IEditorModelManager.INSTANCE.openModel(getTempModelFile());
-        final List<String> xmlContents = new ArrayList<String>();
+        final List<DatabaseElementEntity> result = new ArrayList<DatabaseElementEntity>();
         
         if(model == null) {
             throw new IOException(Messages.ArchiRepository_0);
@@ -384,14 +385,13 @@ public class ArchiRepository implements IArchiRepository {
 
                     try {
                         // Export
-                        GraficoModelExporter exporter = new GraficoModelExporter(model, getLocalRepositoryFolder());
-                        for(String xmlContent :exporter.exportModel()) {
-                        	xmlContents.add(xmlContent);
-                        }
+                        var exporter = new GraficoModelExporter(model, getLocalRepositoryFolder());
+                        var elements = exporter.exportModel();
+                        result.addAll(elements);
                         
                         // Check lock file is deleted
                         checkDeleteLockFile();
-                        
+
                         // Stage modified files to index - this can take a long time!
                         // This will clear any different line endings and calls to git.status() will be faster
 						/*
@@ -400,7 +400,7 @@ public class ArchiRepository implements IArchiRepository {
 						 * addCommand.call(); }
 						 */
                     }
-                    catch(IOException ex) {
+                    catch(Exception ex) {
                         exception[0] = ex;
                     }
                 }
@@ -414,7 +414,7 @@ public class ArchiRepository implements IArchiRepository {
             throw (IOException)exception[0];
         }
         
-        return xmlContents;
+        return result;
     }
     
     @Override

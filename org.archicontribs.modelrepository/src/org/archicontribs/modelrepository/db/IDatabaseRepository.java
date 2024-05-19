@@ -2,6 +2,7 @@ package org.archicontribs.modelrepository.db;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -24,5 +25,7 @@ public interface IDatabaseRepository {
 	
 	public int ReviseModel(UUID modelId, int modelVersion, UUID userId, String description) throws SQLException;
 	
-	public void SaveElement(UUID modelId, int modelVersion, UUID elementId, String elementType, String xmlContent, UUID userId, boolean isDeleted) throws SQLException;
+	public void SaveElement(DatabaseElementEntity entity, UUID userId) throws SQLException;
+	
+	public void SaveElements(List<DatabaseElementEntity> entities, UUID userId) throws SQLException;
 }

@@ -8,10 +8,13 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
+import java.util.List;
 import java.util.UUID;
 
+import org.archicontribs.modelrepository.db.DatabaseElementEntity;
 import org.archicontribs.modelrepository.db.DatabaseRepository;
+
+import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 
 /**
  * Repository class to access SQL Server database and perform actions
@@ -165,21 +168,21 @@ public class SQLServerRepository extends DatabaseRepository implements ISQLServe
 	}
 
 	@Override
-	public void SaveElement(UUID modelId, int modelVersion, UUID elementId, String elementType, String xmlContent,
-			UUID userId, boolean isDeleted) throws SQLException {
+	public void SaveElement(DatabaseElementEntity entity, UUID userId) throws SQLException {
 
-		String sql = "{call SaveModelElement(?, ?, ?, ?, ?, ?, ?)}";
+		String sql = "{call SaveModelElement(?, ?, ?, ?, ?, ?, ?, ?)}";
 
 		try (Connection conn = GetConnection(); CallableStatement stmt = conn.prepareCall(sql)) {
 
 			// Set the input parameters
-			stmt.setObject(1, modelId);
-			stmt.setInt(2, modelVersion);
-			stmt.setObject(3, elementId);
-			stmt.setString(4, elementType);
-			stmt.setString(5, xmlContent);
-			stmt.setObject(6, userId);
-			stmt.setBoolean(7, isDeleted);
+			stmt.setObject(1, entity.ModelId);
+			stmt.setInt(2, entity.ModelVersion);
+			stmt.setObject(3, entity.Id);
+			stmt.setObject(4, entity.ParentId);
+			stmt.setString(5, entity.Type);
+			stmt.setString(6, entity.XmlContent);
+			stmt.setObject(7, userId);
+			stmt.setBoolean(8, entity.IsDeleted);
 
 			// Execute the stored procedure
 			stmt.execute();
@@ -187,7 +190,42 @@ public class SQLServerRepository extends DatabaseRepository implements ISQLServe
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw e;
-		}
+		}	
+	}
+
+	@Override
+	public void SaveElements(List<DatabaseElementEntity> entities, UUID userId) throws SQLException {
+		
+		String sql = "{call SaveModelElements(?, ?)}";
+
+		try (Connection conn = GetConnection(); CallableStatement stmt = conn.prepareCall(sql)) {
+
+			SQLServerDataTable tvp = new SQLServerDataTable();
+
+            // Add the columns to the TVP
+			tvp.addColumnMetadata("Id", java.sql.Types.CHAR);
+            tvp.addColumnMetadata("ModelId", java.sql.Types.CHAR);
+            tvp.addColumnMetadata("ModelVersion", java.sql.Types.INTEGER);
+            tvp.addColumnMetadata("ParentId", java.sql.Types.CHAR);
+            tvp.addColumnMetadata("ElementType", java.sql.Types.NVARCHAR);
+            tvp.addColumnMetadata("ElementContent", java.sql.Types.SQLXML);
+
+         // Add the rows to the TVP
+            for (var entity : entities) {
+                tvp.addRow(entity.Id, entity.ModelId, entity.ModelVersion, entity.ParentId, entity.Type, entity.XmlContent);
+            }
+            
+            // Set parameters
+            stmt.setObject(1, tvp);
+            stmt.setObject(2, userId);
+
+			// Execute the stored procedure
+			stmt.execute();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw e;
+		}	
 		
 	}
 }

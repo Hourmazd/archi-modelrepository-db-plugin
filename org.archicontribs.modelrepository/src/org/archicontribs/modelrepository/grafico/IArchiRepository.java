@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 import org.archicontribs.modelrepository.authentication.UsernamePassword;
+import org.archicontribs.modelrepository.db.DatabaseElementEntity;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -163,7 +164,7 @@ public interface IArchiRepository extends IGraficoConstants {
      * @throws IOException
      * @throws GitAPIException 
      */
-    List<String> exportModelToGraficoFiles() throws IOException;
+    List<DatabaseElementEntity> exportModelToGraficoFiles() throws IOException;
 
     /**
      * Save a checksum

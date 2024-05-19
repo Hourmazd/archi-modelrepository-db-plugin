@@ -233,7 +233,7 @@ public class ModelRepositoryPreferencePage extends PreferencePage
 			var repository = new SQLServerRepository(parameters);
 
 			try {
-				var result = repository.validateConnection();
+				var result = repository.ValidateConnection();
 
 				if (result) {
 					MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Connection Test",
